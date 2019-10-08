@@ -117,27 +117,27 @@ servers.modded.listCommand = "list";
 function commandHandler(input, priviledged) {
 	var args = input.split(' ');
 	var cmd = args[0];
-	var unauthorized = "You are not permitted to perform this command.";
+	var unauthorized = "You are not allowed to use this command";
 
 	var serverName = args[1] && args[1].toLowerCase();
 	var server = servers[serverName];
 
 	if (cmd == "start") {
 		if (!server) return `Unknown server ${serverName}`
-		if (server.process) return `${serverName} server is already running.`;
+		if (server.process) return `:x: ${serverName} server is already running`;
 		server.start();
 		return `Starting ${serverName} server.`;
 	} else if (cmd == "stop") {
 		if (!priviledged) return unauthorized;
 		if (!server) return `Unknown server ${serverName}`
-		if (!server.process) return `${serverName} server is not running.`;
+		if (!server.process) return `:x: ${serverName} server is not running`;
 		server.stop();
 		return `Stopping ${serverName} server.`;
 	} else if (cmd == "input") {
 		if (!priviledged) return unauthorized;
 		if (!server) return `Unknown server ${serverName}`
 		if (!server.process) return `${serverName} is not running.`;
-		if (args[2] == "list" || args[2] == "minecraft:list") return "`list` command is prohibited from running in console because it would interfere with idle minute counting.";
+		if (args[2] == "list" || args[2] == "minecraft:list") return ":x: `list` command is prohibited from running in console because it would interfere with idle minute counting";
 		server.process.stdin.write(args.slice(2).join(" ") + '\n');
 		return;
 	} else if (cmd == "list") {
@@ -150,9 +150,9 @@ function commandHandler(input, priviledged) {
 			return String(error);
 		}
 	} else if (cmd == "help") {
-		return "JPLand Manager automatically shuts down Minecraft servers after "+MAX_IDLE_MINUTES+" minutes to save resources, and allows you to start servers again using the `start <server>` command.\n" +
-			"Use `list` to see the list of servers and their statuses.\n" +
-			(priviledged ? "\nYou are an admin and may also use these commands: `stop <server>`, `input <server> <command>` (input a command into a server's console), `eval <code>` (evaluate javascript in the Node.js process)." : "");
+		return "JPLand Manager automatically shuts down Minecraft servers after "+MAX_IDLE_MINUTES+" minutes to save resources, and allows you to start servers again using `%start <server>`.\n" +
+			"Use `%list` to see the list of servers and their statuses.\n" +
+			(priviledged ? "\nYou are an admin and also have access to: `%stop <server>`, `%input <server> <command>` (input into a server's console), `%eval <code>` (evaluate JS code)" : "");
 	} else {
 		//return `Unknown command \`${cmd}\`; commands are \`start\`, \`stop\`, \`input\`, \`list\`, and \`eval\`.`;
 		return `Unknown command \`${cmd}\`, use \`help\` for the list of commands.`;
@@ -172,7 +172,7 @@ if (process.env.DISCORD_TOKEN) {
 	dClient.login(process.env.DISCORD_TOKEN);
 	dClient.on("error", error => console.error(colors.red("Discord client error: " + error.message)));
 	function setStatus() {
-		dClient.user.setActivity("cmdchar is %, use %help for info");
+		dClient.user.setActivity("%help");
 	}
 	setInterval(setStatus, 1000*60*30);
 	dClient.on("ready", () => {
@@ -190,7 +190,7 @@ if (process.env.DISCORD_TOKEN) {
 		let server = servers[serverName];
 		server.on("idle timeout", () => {
 			let channel = dClient.channels.get("452025433328975872");
-			if (channel) channel.send(`${serverName} server has been shut down due to 1 hour of inactivity. Run \`%start ${serverName}\` when you want to play on it again.`);
+			if (channel) channel.send(`${serverName} server has been shut down due to 1 hour of inactivity.\nRun \`%start ${serverName}\` to restart it whenever you want to play`);
 		});
 	}
 }
